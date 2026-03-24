@@ -1,18 +1,15 @@
-package com.example.employeemanagement.controller;
+package com.example.employeemanagement;
 
 import com.example.employeemanagement.service.UtilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController           // Mọi method trả về JSON tự động
 @RequestMapping("/api")   // Base URL
 @RequiredArgsConstructor  // Lombok tự tạo constructor inject 2 field final bên dưới
 public class HelloController {
-
-    // ✅ Constructor Injection — Spring tự inject, không cần @Autowired tường minh
     private final UtilityService utilityService;
     private final PasswordEncoder passwordEncoder;  // Bean từ A
 
