@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class UtilityService {
     // AtomicInteger đảm bảo thread-safe khi generate code đồng thời
     private final AtomicInteger counter = new AtomicInteger(1000);
-
     /**
      * Tạo mã nhân viên tự động: EMP-20250001
      * Format: EMP-{YEAR}{4 chữ số tăng dần}

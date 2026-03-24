@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 @Configuration  // Nói với Spring: class này chứa định nghĩa Bean
 public class AppConfig {
     /**
