@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: employee-management
+
+  datasource:
+    url: jdbc:h2:mem:employeedb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true       # ? SQL log ??p h?n (có xu?ng dòng, indent)
+        dialect: org.hibernate.dialect.H2Dialect
+
+server:
+  port: 8080

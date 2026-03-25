@@ -8,11 +8,12 @@ import java.time.LocalDateTime;
 @Builder  // Dùng Builder pattern thay vì setter dài dòng
 public class EmployeeResponse {
     private Long id;
-    private String employeeCode;    // EMP-20251001 (từ UtilityService)
+    private String employeeCode;
     private String name;
     private String email;
-    private String department;
     private String position;
     private Double salary;
+    private Long departmentId;       // ← Thêm mới
+    private String departmentName;   // ← Thêm mới
     private LocalDateTime createdAt;
 }
