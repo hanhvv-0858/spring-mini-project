@@ -6,7 +6,7 @@ import lombok.Data;
 public class EmployeeRequest {
     private String name;
     private String email;
-    private String department;
     private String position;
     private Double salary;
+    private Long departmentId;
 }

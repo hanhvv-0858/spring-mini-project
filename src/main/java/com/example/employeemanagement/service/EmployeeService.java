@@ -8,6 +8,7 @@ public interface EmployeeService {
     List<EmployeeResponse> getAllEmployees();
     EmployeeResponse getEmployeeById(Long id);
     List<EmployeeResponse> searchByName(String name);
+    List<EmployeeResponse> search(String keyword);
     EmployeeResponse createEmployee(EmployeeRequest request);
     EmployeeResponse updateEmployee(Long id, EmployeeRequest request);
     void deleteEmployee(Long id);
