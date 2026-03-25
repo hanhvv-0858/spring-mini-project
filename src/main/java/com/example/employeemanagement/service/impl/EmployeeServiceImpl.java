@@ -4,6 +4,8 @@ import com.example.employeemanagement.dto.request.EmployeeRequest;
 import com.example.employeemanagement.dto.response.EmployeeResponse;
 import com.example.employeemanagement.entity.Department;
 import com.example.employeemanagement.entity.Employee;
+import com.example.employeemanagement.exception.BusinessException;
+import com.example.employeemanagement.exception.ResourceNotFoundException;
 import com.example.employeemanagement.repository.DepartmentRepository;
 import com.example.employeemanagement.repository.EmployeeRepository;
 import com.example.employeemanagement.service.EmployeeService;
@@ -74,11 +76,12 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .toList();
     }
 
+    // ─── getEmployeeById ──────────────────────────────────────
     @Override
     public EmployeeResponse getEmployeeById(Long id) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found: " + id));
-        return toResponse(employee);
+        return employeeRepository.findById(id)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
     }
 
     @Override
@@ -93,15 +96,19 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .stream().map(this::toResponse).toList();
     }
 
-    // ─── WRITE ────────────────────────────────────────────────────
+    // ─── createEmployee ───────────────────────────────────────
     @Override
-    @Transactional   // Override readOnly → cho phép INSERT/UPDATE/DELETE
+    @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
-        // Validate department tồn tại
+        // Kiểm tra email trùng
+        if (employeeRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException("Email '" + request.getEmail() + "' đã tồn tại");
+        }
+
         Department department = departmentRepository
                 .findById(request.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Department not found: " + request.getDepartmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department", "id", request.getDepartmentId()));
 
         Employee employee = Employee.builder()
                 .employeeCode(utilityService.generateEmployeeCode())
@@ -115,13 +122,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         return toResponse(employeeRepository.save(employee));
     }
 
+    // ─── updateEmployee ───────────────────────────────────────
     @Override
     @Transactional
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
 
-        // Chỉ update field nếu request gửi lên (null = giữ nguyên)
+        // Kiểm tra email trùng với employee KHÁC
+        if (request.getEmail() != null &&
+                employeeRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            throw new BusinessException("Email '" + request.getEmail() + "' đã tồn tại");
+        }
+
         if (request.getName() != null)
             employee.setName(utilityService.formatName(request.getName()));
         if (request.getEmail() != null)
@@ -133,20 +146,20 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (request.getDepartmentId() != null) {
             Department dept = departmentRepository
                     .findById(request.getDepartmentId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Department not found: " + request.getDepartmentId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Department", "id", request.getDepartmentId()));
             employee.setDepartment(dept);
         }
 
-        // Không cần gọi save() — @Transactional tự detect thay đổi (Dirty Checking)
         return toResponse(employee);
     }
 
+    // ─── deleteEmployee ───────────────────────────────────────
     @Override
     @Transactional
     public void deleteEmployee(Long id) {
         if (!employeeRepository.existsById(id))
-            throw new RuntimeException("Employee not found: " + id);
+            throw new ResourceNotFoundException("Employee", "id", id);
         employeeRepository.deleteById(id);
     }
 
