@@ -2,6 +2,7 @@ package com.example.employeemanagement.controller;
 
 import com.example.employeemanagement.dto.request.EmployeeRequest;
 import com.example.employeemanagement.dto.response.EmployeeResponse;
+import com.example.employeemanagement.exception.BusinessException;
 import com.example.employeemanagement.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,16 @@ public class EmployeeController {
     @GetMapping("/search")
     public ResponseEntity<List<EmployeeResponse>> search(
             @RequestParam String keyword) {
-        return ResponseEntity.ok(employeeService.search(keyword));
+        // ① Kiểm tra keyword null hoặc rỗng
+        if (keyword == null || keyword.isBlank()) {
+            throw new BusinessException("Từ khóa tìm kiếm không được để trống");
+        }
+        // ② Kiểm tra độ dài tối thiểu
+        if (keyword.trim().length() < 2) {
+            throw new BusinessException("Từ khóa tìm kiếm phải có ít nhất 2 ký tự");
+        }
+        List<EmployeeResponse> results = employeeService.search(keyword.trim());
+        return ResponseEntity.ok(results);
     }
 
     // POST /api/employees

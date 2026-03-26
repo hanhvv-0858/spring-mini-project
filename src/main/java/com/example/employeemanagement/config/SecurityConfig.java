@@ -24,7 +24,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/**",
-                                "/h2-console/**"
+                                "/employees/**", // MVC routes
+                                "/departments/**",// MVC routes
+                                "/h2-console/**",
+                                "/css/**",
+                                "/js/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );
