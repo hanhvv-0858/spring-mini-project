@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh Sách Nhân Viên</title>
+    <th:block th:replace="~{fragments/layout :: title}"></th:block>
+</head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <h1 class="page-title" th:text="${pageTitle}">Danh Sách Nhân Viên</h1>
+
+    <!-- Flash messages -->
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+    <div style="margin-bottom:16px">
+        <a th:href="@{/employees/add}" class="btn btn-primary">+ Thêm Nhân Viên</a>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Mã NV</th>
+            <th>Họ Tên</th>
+            <th>Email</th>
+            <th>Chức Vụ</th>
+            <th>Phòng Ban</th>
+            <th>Lương (VNĐ)</th>
+            <th>Thao Tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${employees.isEmpty()}">
+            <td colspan="8" class="empty-state">Chưa có nhân viên nào</td>
+        </tr>
+        <tr th:each="emp, stat : ${employees}">
+            <td th:text="${stat.count}"></td>
+            <td th:text="${emp.employeeCode}"></td>
+            <td th:text="${emp.name}"></td>
+            <td th:text="${emp.email}"></td>
+            <td th:text="${emp.position}"></td>
+            <td th:text="${emp.departmentName}"></td>
+            <td th:text="${#numbers.formatDecimal(emp.salary, 0, 'COMMA', 0, 'POINT')}"></td>
+            <td>
+                <a th:href="@{/employees/edit/{id}(id=${emp.id})}" class="btn btn-warning">Sửa</a>
+                <form th:action="@{/employees/delete/{id}(id=${emp.id})}"
+                      method="post" style="display:inline"
+                      onsubmit="return confirm('Xác nhận xóa nhân viên này?')">
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

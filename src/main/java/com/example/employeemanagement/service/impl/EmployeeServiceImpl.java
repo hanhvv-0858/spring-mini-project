@@ -92,8 +92,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     // Tìm kiếm tổng hợp: theo tên HOẶC phòng ban
     public List<EmployeeResponse> search(String keyword) {
-        return employeeRepository.searchByKeyword(keyword)
-                .stream().map(this::toResponse).toList();
+        try {
+            List<Employee> results = employeeRepository.searchByKeyword(keyword);
+            return results.stream().map(this::toResponse).toList();
+        } catch (Exception ex) {
+            // DB lỗi, query lỗi... → không lộ chi tiết ra ngoài
+            throw new BusinessException("Tìm kiếm thất bại, vui lòng thử lại");
+        }
     }
 
     // ─── createEmployee ───────────────────────────────────────

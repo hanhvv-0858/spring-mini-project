@@ -4,6 +4,7 @@ import com.example.employeemanagement.dto.request.DepartmentRequest;
 import com.example.employeemanagement.dto.response.DepartmentResponse;
 import com.example.employeemanagement.entity.Department;
 import com.example.employeemanagement.repository.DepartmentRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class DepartmentController {
 
     @PostMapping
     public ResponseEntity<DepartmentResponse> create(
-            @RequestBody DepartmentRequest request) {
+            @Valid @RequestBody DepartmentRequest request) {
         Department saved = departmentRepository.save(
                 Department.builder()
                         .name(request.getName())

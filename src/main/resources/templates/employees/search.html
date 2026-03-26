@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tìm Kiếm Nhân Viên</title>
+    <th:block th:replace="~{fragments/layout :: title}"></th:block>
+</head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <h1 class="page-title">
+        &#128269; Tìm Kiếm Nhân Viên
+        <span th:if="${resultCount != null}" class="result-badge"
+              th:text="${resultCount} + ' kết quả'"></span>
+    </h1>
+
+    <form th:action="@{/employees/search}" method="get">
+        <div class="search-box">
+            <input type="text" name="keyword"
+                   th:value="${keyword}"
+                   placeholder="Tìm theo tên hoặc phòng ban..."
+                   autofocus/>
+            <button type="submit" class="btn btn-primary">Tìm Kiếm</button>
+            <a th:href="@{/employees/search}" class="btn btn-secondary">Xóa</a>
+        </div>
+    </form>
+
+    <div th:if="${searchError}" class="alert alert-error" th:text="${searchError}"></div>
+
+    <div th:if="${keyword == null}" class="empty-state">
+        Nhập từ khóa để tìm kiếm nhân viên theo tên hoặc phòng ban
+    </div>
+
+    <div th:if="${employees != null and employees.isEmpty()}" class="empty-state">
+        Không tìm thấy nhân viên nào với từ khóa "<span th:text="${keyword}"></span>"
+    </div>
+
+    <table th:if="${employees != null and !employees.isEmpty()}">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Mã NV</th>
+            <th>Họ Tên</th>
+            <th>Email</th>
+            <th>Chức Vụ</th>
+            <th>Phòng Ban</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="emp, stat : ${employees}">
+            <td th:text="${stat.count}"></td>
+            <td th:text="${emp.employeeCode}"></td>
+            <td th:text="${emp.name}"></td>
+            <td th:text="${emp.email}"></td>
+            <td th:text="${emp.position}"></td>
+            <td th:text="${emp.departmentName}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+### ========================================
+### EMPLOYEE MANAGEMENT API — HTTP Client
+### ========================================
+
+### [1] Hello — kiểm tra server chạy
+GET http://localhost:8080/api/hello
+Accept: application/json
+
+###
+
+### [2] Get ALL employees
+GET http://localhost:8080/api/employees
+Accept: application/json
+
+###
+
+### [3] Get employees — filter theo department
+GET http://localhost:8080/api/employees?department=Engineering
+Accept: application/json
+
+###
+
+### [4] Get employee by ID
+GET http://localhost:8080/api/employees/1
+Accept: application/json
+
+###
+
+### [5] Search — tìm theo tên HOẶC phòng ban
+GET http://localhost:8080/api/employees/search?keyword=nguyen
+Accept: application/json
+
+###
+
+### [6] Create employee mới
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "name": "hoang van em",
+  "email": "em.hoang@company.com",
+  "position": "DevOps Engineer",
+  "salary": 28000000,
+  "departmentId": 1
+}
+
+###
+
+### [7] Update employee
+PUT http://localhost:8080/api/employees/1
+Content-Type: application/json
+
+{
+  "salary": 35000000,
+  "position": "Senior Backend Developer"
+}
+
+###
+
+### [8] Delete employee
+DELETE http://localhost:8080/api/employees/4
+Accept: application/json
+
+###
+
+### [9] Get ALL departments
+GET http://localhost:8080/api/departments
+Accept: application/json
+
+###
+
+### [10] Create department mới
+POST http://localhost:8080/api/departments
+Content-Type: application/json
+
+{
+  "name": "Marketing",
+  "description": "Marketing and communications"
+}
+
+###
+
+### [11] Demo BCrypt hash
+GET http://localhost:8080/api/demo/hash?password=mySecret123
+Accept: application/json
+
+###
+
+### ── ERROR CASES ──────────────────────────────────
+
+### [12] Validation error — thiếu field bắt buộc
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{}
+
+###
+
+### [13] Not Found — ID không tồn tại
+GET http://localhost:8080/api/employees/999
+Accept: application/json
+
+###
+
+### [14] Search — keyword quá ngắn
+GET http://localhost:8080/api/employees/search?keyword=a
+Accept: application/json
