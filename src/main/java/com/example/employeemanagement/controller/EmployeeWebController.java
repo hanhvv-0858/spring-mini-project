@@ -8,6 +8,7 @@ import com.example.employeemanagement.repository.DepartmentRepository;
 import com.example.employeemanagement.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequestMapping("/employees")
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class EmployeeWebController {
     // ─── LIST ─────────────────────────────────────────────────────
     @GetMapping("/list")
     public String listEmployees(Model model) {
+        log.debug("Web: GET /employees/list");
         model.addAttribute("employees", employeeService.getAllEmployees());
         model.addAttribute("pageTitle", "Danh Sách Nhân Viên");
         return "employees/list";
@@ -34,6 +37,7 @@ public class EmployeeWebController {
     // ─── ADD ──────────────────────────────────────────────────────
     @GetMapping("/add")
     public String showAddForm(Model model) {
+        log.debug("Web: GET /employees/add — show form");
         model.addAttribute("employeeRequest", new EmployeeRequest());
         model.addAttribute("departments", getDepartments());
         model.addAttribute("pageTitle", "Thêm Nhân Viên Mới");
@@ -49,6 +53,10 @@ public class EmployeeWebController {
             RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
+            log.warn("Web: POST /employees/add — validation failed: {}",
+                    bindingResult.getFieldErrors().stream()
+                            .map(e -> e.getField() + "=" + e.getDefaultMessage())
+                            .toList());
             model.addAttribute("departments", getDepartments());
             model.addAttribute("pageTitle", "Thêm Nhân Viên Mới");
             model.addAttribute("isEdit", false);
@@ -56,10 +64,16 @@ public class EmployeeWebController {
         }
 
         try {
-            employeeService.createEmployee(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Thêm nhân viên thành công!");
+            EmployeeResponse created = employeeService.createEmployee(request);
+            log.info("Web: Employee created via form — id={}, name='{}'",
+                    created.getId(), created.getName());log.info("Web: Employee created via form — id={}, name='{}'",
+                    created.getId(), created.getName());
+
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Thêm nhân viên '" + created.getName() + "' thành công!");
             return "redirect:/employees/list";
         } catch (BusinessException ex) {
+            log.warn("Web: POST /employees/add — business error: {}", ex.getMessage());
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("departments", getDepartments());
             model.addAttribute("isEdit", false);
@@ -70,6 +84,7 @@ public class EmployeeWebController {
     // ─── EDIT ─────────────────────────────────────────────────────
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Long id, Model model) {
+        log.debug("Web: GET /employees/edit/{}", id);
         EmployeeResponse employee = employeeService.getEmployeeById(id);
 
         EmployeeRequest request = new EmployeeRequest();
@@ -96,6 +111,7 @@ public class EmployeeWebController {
             RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
+            log.warn("Web: POST /employees/edit/{} — validation failed", id);
             model.addAttribute("employeeId", id);
             model.addAttribute("departments", getDepartments());
             model.addAttribute("pageTitle", "Chỉnh Sửa Nhân Viên");
@@ -104,10 +120,14 @@ public class EmployeeWebController {
         }
 
         try {
-            employeeService.updateEmployee(id, request);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật nhân viên thành công!");
+            EmployeeResponse updated = employeeService.updateEmployee(id, request);
+            log.info("Web: Employee updated via form — id={}, name='{}'",
+                    updated.getId(), updated.getName());
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Cập nhật nhân viên '" + updated.getName() + "' thành công!");
             return "redirect:/employees/list";
         } catch (BusinessException ex) {
+            log.warn("Web: POST /employees/edit/{} — business error: {}", id, ex.getMessage());
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("employeeId", id);
             model.addAttribute("departments", getDepartments());
@@ -123,8 +143,10 @@ public class EmployeeWebController {
             RedirectAttributes redirectAttributes) {
         try {
             employeeService.deleteEmployee(id);
+            log.info("Web: Employee deleted via form — id={}", id);
             redirectAttributes.addFlashAttribute("successMessage", "Xóa nhân viên thành công!");
         } catch (Exception ex) {
+            log.warn("Web: Delete employee id={} failed: {}", id, ex.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Không thể xóa nhân viên: " + ex.getMessage());
         }
@@ -141,9 +163,11 @@ public class EmployeeWebController {
         model.addAttribute("pageTitle", "Tìm Kiếm Nhân Viên");
 
         if (keyword != null && keyword.trim().length() >= 2) {
+            log.debug("Web: Search employees keyword='{}'", keyword.trim());
             List<EmployeeResponse> results = employeeService.search(keyword.trim());
             model.addAttribute("employees", results);
             model.addAttribute("resultCount", results.size());
+            log.debug("Web: Search returned {} results", results.size());
         } else if (keyword != null && !keyword.isBlank()) {
             model.addAttribute("searchError", "Từ khóa phải có ít nhất 2 ký tự");
         }

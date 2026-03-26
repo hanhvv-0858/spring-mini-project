@@ -1,0 +1,58 @@
+# ============================================================
+#  application-prod.yml — Profile PROD (MySQL)
+#
+#  Trước khi chạy:
+#    1. CREATE DATABASE employee_db CHARACTER SET utf8mb4;
+#    2. Sửa password bên dưới
+# ============================================================
+
+spring:
+  # ── MySQL ─────────────────────────────────────────────────
+  datasource:
+    url: jdbc:mysql://localhost:3306/employee_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10      # Connection pool tối đa
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+  h2:
+    console:
+      enabled: false             # Tắt H2 Console khi dùng MySQL
+
+  # ── JPA ───────────────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: update           # Giữ data, chỉ thêm column/table mới
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 100
+
+  # ── Seed Data ─────────────────────────────────────────────
+  # MySQL giữ data qua các lần restart
+  # → Đổi sang false sau lần chạy đầu tiên (DB đã có data)
+  seed-data:
+    enabled: true
+
+# ── Logging: PROD — chỉ INFO trở lên + ghi file ──────────
+logging:
+  level:
+    com.example.employeemanagement: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+  file:
+    name: logs/employee-management.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      file-name-pattern: logs/employee-management-%d{yyyy-MM-dd}.%i.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n"
+    file:    "%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n"
