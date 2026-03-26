@@ -12,36 +12,57 @@ import com.example.employeemanagement.service.EmployeeService;
 import com.example.employeemanagement.service.UtilityService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)   // Mặc định: tất cả method là read-only
+@Transactional(readOnly = true)
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final UtilityService utilityService;
 
+    /**
+     * Đọc từ application-prod.yml: spring.seed-data.enabled
+     * dev  → true  (H2 reset mỗi lần restart, luôn phải seed)
+     * prod → true  (lần đầu), false (sau khi đã có data)
+     * Mặc định true nếu property không tồn tại
+     */
+    @Value("${spring.seed-data.enabled:true}")
+    private boolean seedDataEnabled;
+
     // ─── SEED DATA ────────────────────────────────────────────────
     @PostConstruct
-    @Transactional   // Override readOnly = true để INSERT được
+    @Transactional
     public void initSampleData() {
-        // Tạo departments trước
-        Department engineering = departmentRepository.save(
-                Department.builder().name("Engineering").description("Software development").build()
-        );
-        Department hr = departmentRepository.save(
-                Department.builder().name("HR").description("Human resources").build()
-        );
-        Department finance = departmentRepository.save(
-                Department.builder().name("Finance").description("Financial management").build()
-        );
+        if (!seedDataEnabled) {
+            log.info("Seed data disabled by config, skipping...");
+            return;
+        }
 
-        // Tạo employees
+        // MySQL giữ data qua restart → chỉ seed khi DB đang trống
+        if (departmentRepository.count() > 0) {
+            log.info("Database already has data ({} departments), skipping seed.",
+                    departmentRepository.count());
+            return;
+        }
+
+        log.info("Starting database seed...");
+
+        Department engineering = departmentRepository.save(
+                Department.builder().name("Engineering").description("Software development").build());
+        Department hr = departmentRepository.save(
+                Department.builder().name("HR").description("Human resources").build());
+        Department finance = departmentRepository.save(
+                Department.builder().name("Finance").description("Financial management").build());
+
         employeeRepository.save(Employee.builder()
                 .employeeCode(utilityService.generateEmployeeCode())
                 .name("Nguyen Van An").email("an.nguyen@company.com")
@@ -65,55 +86,71 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .name("Pham Thi Dung").email("dung.pham@company.com")
                 .position("Accountant").salary(20_000_000.0)
                 .department(finance).build());
+
+        log.info("✅ Seed completed: {} departments, {} employees",
+                departmentRepository.count(), employeeRepository.count());
     }
 
-    // ─── READ ─────────────────────────────────────────────────────
+    // ─── READ ──────────────────────────────────────────────────────
     @Override
     public List<EmployeeResponse> getAllEmployees() {
-        return employeeRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        log.debug("Fetching all employees");
+        List<EmployeeResponse> result = employeeRepository.findAll()
+                .stream().map(this::toResponse).toList();
+        log.debug("Found {} employees", result.size());
+        return result;
     }
 
-    // ─── getEmployeeById ──────────────────────────────────────
     @Override
     public EmployeeResponse getEmployeeById(Long id) {
+        log.debug("Fetching employee id={}", id);
         return employeeRepository.findById(id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
+                .orElseThrow(() -> {
+                    log.warn("Employee not found: id={}", id);
+                    return new ResourceNotFoundException("Employee", "id", id);
+                });
     }
 
     @Override
     public List<EmployeeResponse> searchByName(String name) {
+        log.debug("Searching employees by name='{}'", name);
         return employeeRepository.findByNameContainingIgnoreCase(name)
                 .stream().map(this::toResponse).toList();
     }
 
-    // Tìm kiếm tổng hợp: theo tên HOẶC phòng ban
+    @Override
     public List<EmployeeResponse> search(String keyword) {
+        log.debug("Searching employees by keyword='{}'", keyword);
         try {
-            List<Employee> results = employeeRepository.searchByKeyword(keyword);
-            return results.stream().map(this::toResponse).toList();
+            List<EmployeeResponse> results = employeeRepository.searchByKeyword(keyword)
+                    .stream().map(this::toResponse).toList();
+            log.debug("Search '{}' returned {} results", keyword, results.size());
+            return results;
         } catch (Exception ex) {
-            // DB lỗi, query lỗi... → không lộ chi tiết ra ngoài
+            log.error("Search failed for keyword='{}': {}", keyword, ex.getMessage(), ex);
             throw new BusinessException("Tìm kiếm thất bại, vui lòng thử lại");
         }
     }
 
-    // ─── createEmployee ───────────────────────────────────────
+    // ─── WRITE ─────────────────────────────────────────────────────
     @Override
     @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
-        // Kiểm tra email trùng
+        log.info("Creating employee: name='{}', email='{}'",
+                request.getName(), request.getEmail());
+
         if (employeeRepository.existsByEmail(request.getEmail())) {
+            log.warn("Create failed — duplicate email: '{}'", request.getEmail());
             throw new BusinessException("Email '" + request.getEmail() + "' đã tồn tại");
         }
 
         Department department = departmentRepository
                 .findById(request.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Department", "id", request.getDepartmentId()));
+                .orElseThrow(() -> {
+                    log.warn("Create failed — department not found: id={}", request.getDepartmentId());
+                    return new ResourceNotFoundException("Department", "id", request.getDepartmentId());
+                });
 
         Employee employee = Employee.builder()
                 .employeeCode(utilityService.generateEmployeeCode())
@@ -124,52 +161,80 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .department(department)
                 .build();
 
-        return toResponse(employeeRepository.save(employee));
+        Employee saved = employeeRepository.save(employee);
+        log.info("✅ Employee created: id={}, code='{}', name='{}', dept='{}'",
+                saved.getId(), saved.getEmployeeCode(), saved.getName(), department.getName());
+
+        return toResponse(saved);
     }
 
-    // ─── updateEmployee ───────────────────────────────────────
     @Override
     @Transactional
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
+        log.info("Updating employee id={}", id);
 
-        // Kiểm tra email trùng với employee KHÁC
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Update failed — employee not found: id={}", id);
+                    return new ResourceNotFoundException("Employee", "id", id);
+                });
+
         if (request.getEmail() != null &&
                 employeeRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            log.warn("Update failed — duplicate email: '{}' for id={}", request.getEmail(), id);
             throw new BusinessException("Email '" + request.getEmail() + "' đã tồn tại");
         }
 
-        if (request.getName() != null)
-            employee.setName(utilityService.formatName(request.getName()));
-        if (request.getEmail() != null)
+        // Log các field đang thay đổi
+        StringBuilder changes = new StringBuilder();
+
+        if (request.getName() != null) {
+            String formatted = utilityService.formatName(request.getName());
+            changes.append("name='").append(formatted).append("' ");
+            employee.setName(formatted);
+        }
+        if (request.getEmail() != null) {
+            changes.append("email='").append(request.getEmail()).append("' ");
             employee.setEmail(request.getEmail());
-        if (request.getPosition() != null)
+        }
+        if (request.getPosition() != null) {
+            changes.append("position='").append(request.getPosition()).append("' ");
             employee.setPosition(request.getPosition());
-        if (request.getSalary() != null)
+        }
+        if (request.getSalary() != null) {
+            changes.append("salary=").append(request.getSalary()).append(" ");
             employee.setSalary(request.getSalary());
+        }
         if (request.getDepartmentId() != null) {
             Department dept = departmentRepository
                     .findById(request.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Department", "id", request.getDepartmentId()));
+                    .orElseThrow(() -> {
+                        log.warn("Update failed — department not found: id={}", request.getDepartmentId());
+                        return new ResourceNotFoundException("Department", "id", request.getDepartmentId());
+                    });
+            changes.append("department='").append(dept.getName()).append("' ");
             employee.setDepartment(dept);
         }
 
+        log.info("✅ Employee updated: id={}, changes=[{}]", id, changes.toString().trim());
         return toResponse(employee);
     }
 
-    // ─── deleteEmployee ───────────────────────────────────────
     @Override
     @Transactional
     public void deleteEmployee(Long id) {
-        if (!employeeRepository.existsById(id))
+        log.info("Deleting employee id={}", id);
+
+        if (!employeeRepository.existsById(id)) {
+            log.warn("Delete failed — employee not found: id={}", id);
             throw new ResourceNotFoundException("Employee", "id", id);
+        }
+
         employeeRepository.deleteById(id);
+        log.info("✅ Employee deleted: id={}", id);
     }
 
-    // ─── MAPPER ───────────────────────────────────────────────────
-    // Convert Entity → DTO (tránh lộ Entity ra ngoài)
+    // ─── MAPPER ────────────────────────────────────────────────────
     private EmployeeResponse toResponse(Employee e) {
         return EmployeeResponse.builder()
                 .id(e.getId())
