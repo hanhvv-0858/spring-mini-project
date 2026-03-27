@@ -94,7 +94,7 @@ public class ReportService {
     }
 
     /**
-     * MODULE 10: Thống kê đầy đủ — REST API
+     * Thống kê đầy đủ — REST API
      */
     @Cacheable(value = "reportFull", key = "'full'")
     public StatisticsResponse getFullStatistics() {
@@ -137,7 +137,7 @@ public class ReportService {
     }
 
     /**
-     * MODULE 10: Thống kê theo phòng ban — Web UI
+     * Thống kê theo phòng ban — Web UI
      */
     @Cacheable(value = "reportByDept", key = "'all'")
     public List<DeptStatResponse> getDepartmentStats() {

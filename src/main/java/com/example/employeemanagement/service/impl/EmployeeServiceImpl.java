@@ -139,13 +139,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<EmployeeResponse> searchByName(String name) {
-        log.debug("Searching employees by name='{}'", name);
-        return employeeRepository.findByNameContainingIgnoreCase(name)
-                .stream().map(this::toResponse).toList();
-    }
-
-    @Override
     public List<EmployeeResponse> search(String keyword) {
         log.debug("Searching employees by keyword='{}'", keyword);
         try {
