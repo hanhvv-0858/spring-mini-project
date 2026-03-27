@@ -1,39 +1,141 @@
-### ========================================
-### EMPLOYEE MANAGEMENT API — HTTP Client
-### ========================================
+### ============================================================
+### EMPLOYEE MANAGEMENT API — HTTP Client (Module 1-9)
+### Dùng với IntelliJ IDEA HTTP Client hoặc VS Code REST Client
+###
+### ⚠️  Từ Module 9: Mọi API (trừ /api/auth/**) đều cần JWT token
+###    Bước 1: Chạy [M9-1] hoặc [M9-2] để lấy token
+###    Bước 2: Copy token vào biến @adminToken / @userToken bên dưới
+### ============================================================
 
-### [1] Hello — kiểm tra server chạy
-GET http://localhost:8080/api/hello
+### ── Khai báo biến token (paste token vào đây sau khi login) ──
+@adminToken = paste_admin_token_here
+@userToken  = paste_user_token_here
+@baseUrl    = http://localhost:8080
+
+
+### ============================================================
+###  MODULE 9 — AUTHENTICATION
+### ============================================================
+
+### [M9-1] Đăng nhập ADMIN (default: admin/admin123)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+###
+
+### [M9-2] Đăng nhập USER (default: user/user123)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user123"
+}
+
+###
+
+### [M9-3] Đăng ký tài khoản mới (ADMIN)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "newadmin",
+  "password": "pass123",
+  "role": "ADMIN"
+}
+
+###
+
+### [M9-4] Đăng ký tài khoản mới (USER)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "password": "pass123",
+  "role": "USER"
+}
+
+###
+
+### [M9-5] Không có token → 403 Forbidden
+GET {{baseUrl}}/api/employees
 Accept: application/json
 
 ###
 
-### [2] Get ALL employees
-GET http://localhost:8080/api/employees
+### [M9-6] Token sai → 403 Forbidden
+GET {{baseUrl}}/api/employees
+Authorization: Bearer invalid.token.here
+Accept: application/json
+
+###
+
+### [M9-7] USER thử tạo nhân viên → 403 Forbidden (chỉ ADMIN mới được)
+POST {{baseUrl}}/api/employees
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "name": "test user",
+  "email": "test@test.com",
+  "position": "Dev",
+  "salary": 10000000,
+  "departmentId": 1
+}
+
+###
+
+### ============================================================
+###  MODULE 1 — HELLO
+### ============================================================
+
+### [1] Hello — kiểm tra server chạy
+GET {{baseUrl}}/api/hello
+Accept: application/json
+
+###
+
+### ============================================================
+###  MODULE 3-4 — EMPLOYEES (cần ADMIN token cho write operations)
+### ============================================================
+
+### [2] Get ALL employees (USER hoặc ADMIN đều được)
+GET {{baseUrl}}/api/employees
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 
 ### [3] Get employees — filter theo department
-GET http://localhost:8080/api/employees?department=Engineering
+GET {{baseUrl}}/api/employees?department=Engineering
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 
 ### [4] Get employee by ID
-GET http://localhost:8080/api/employees/1
+GET {{baseUrl}}/api/employees/1
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 
 ### [5] Search — tìm theo tên HOẶC phòng ban
-GET http://localhost:8080/api/employees/search?keyword=nguyen
+GET {{baseUrl}}/api/employees/search?keyword=nguyen
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 
-### [6] Create employee mới
-POST http://localhost:8080/api/employees
+### [6] Create employee mới (chỉ ADMIN)
+POST {{baseUrl}}/api/employees
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -46,8 +148,9 @@ Content-Type: application/json
 
 ###
 
-### [7] Update employee
-PUT http://localhost:8080/api/employees/1
+### [7] Update employee (chỉ ADMIN)
+PUT {{baseUrl}}/api/employees/1
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -57,20 +160,27 @@ Content-Type: application/json
 
 ###
 
-### [8] Delete employee
-DELETE http://localhost:8080/api/employees/4
+### [8] Delete employee (chỉ ADMIN)
+DELETE {{baseUrl}}/api/employees/5
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 
-### [9] Get ALL departments
-GET http://localhost:8080/api/departments
+### ============================================================
+###  MODULE 3-4 — DEPARTMENTS
+### ============================================================
+
+### [9] Get ALL departments (USER hoặc ADMIN đều được)
+GET {{baseUrl}}/api/departments
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 
-### [10] Create department mới
-POST http://localhost:8080/api/departments
+### [10] Create department mới (chỉ ADMIN)
+POST {{baseUrl}}/api/departments
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -80,28 +190,130 @@ Content-Type: application/json
 
 ###
 
-### [11] Demo BCrypt hash
-GET http://localhost:8080/api/demo/hash?password=mySecret123
+### [11] Create department trùng tên → 400 Business Error
+POST {{baseUrl}}/api/departments
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Engineering",
+  "description": "Trùng tên — sẽ báo lỗi"
+}
+
+###
+
+### ============================================================
+###  MODULE 8 — ACTUATOR & REPORTS
+### ============================================================
+
+### [12] Actuator — health check
+GET {{baseUrl}}/actuator/health
 Accept: application/json
 
 ###
 
-### ── ERROR CASES ──────────────────────────────────
+### [13] Actuator — app info
+GET {{baseUrl}}/actuator/info
+Accept: application/json
 
-### [12] Validation error — thiếu field bắt buộc
-POST http://localhost:8080/api/employees
+###
+
+### [14] Actuator — JVM memory
+GET {{baseUrl}}/actuator/metrics/jvm.memory.used
+Accept: application/json
+
+###
+
+### [15] Report summary (Cache MISS lần đầu — xem log)
+GET {{baseUrl}}/api/reports/summary
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+###
+
+### [16] Report summary (Cache HIT — gọi trong 60s, không thấy log)
+GET {{baseUrl}}/api/reports/summary
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+###
+
+### [17] Report by department
+GET {{baseUrl}}/api/reports/by-department
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+###
+
+### ============================================================
+###  MODULE 2 — UTILITIES
+### ============================================================
+
+### [18] Demo BCrypt hash
+GET {{baseUrl}}/api/demo/hash?password=mySecret123
+Accept: application/json
+
+###
+
+### ============================================================
+###  ERROR CASES — Module 5 Validation & Exception Handling
+### ============================================================
+
+### [E1] Validation error — thiếu field bắt buộc → 400
+POST {{baseUrl}}/api/employees
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {}
 
 ###
 
-### [13] Not Found — ID không tồn tại
-GET http://localhost:8080/api/employees/999
+### [E2] Not Found — ID không tồn tại → 404
+GET {{baseUrl}}/api/employees/999
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 
-### [14] Search — keyword quá ngắn
-GET http://localhost:8080/api/employees/search?keyword=a
+### [E3] Search keyword quá ngắn → 400
+GET {{baseUrl}}/api/employees/search?keyword=a
+Authorization: Bearer {{adminToken}}
 Accept: application/json
+
+###
+
+### [E4] Email trùng → 400 Business Error
+POST {{baseUrl}}/api/employees
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Test Duplicate",
+  "email": "an.nguyen@company.com",
+  "position": "Tester",
+  "salary": 10000000,
+  "departmentId": 1
+}
+
+###
+
+### [E5] Login sai password → 400
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrongpassword"
+}
+
+###
+
+### [E6] Register username đã tồn tại → 400
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "pass123",
+  "role": "USER"
+}

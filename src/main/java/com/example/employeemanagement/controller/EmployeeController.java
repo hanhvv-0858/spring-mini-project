@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     // GET /api/employees
-    // GET /api/employees?department=Engineering
+    // GET: Cả USER và ADMIN đều xem được
     @GetMapping
     public ResponseEntity<List<EmployeeResponse>> getAllEmployees(
             @RequestParam(required = false) String department) {
@@ -61,8 +62,10 @@ public class EmployeeController {
         return ResponseEntity.ok(results);
     }
 
+    // POST, PUT, DELETE: Chỉ ADMIN mới được phép thao tác
     // POST /api/employees
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmployeeResponse> createEmployee(
             @Valid @RequestBody EmployeeRequest request) {  // ← thêm @Valid
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -71,6 +74,7 @@ public class EmployeeController {
 
     // PUT /api/employees/1
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmployeeResponse> updateEmployee(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeRequest request) {  // ← thêm @Valid
@@ -79,6 +83,7 @@ public class EmployeeController {
 
     // DELETE /api/employees/1
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();

@@ -14,10 +14,14 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import com.example.employeemanagement.entity.User;
+import com.example.employeemanagement.repository.UserRepository;
+
 
 import java.util.List;
 
@@ -30,6 +34,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final UtilityService utilityService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Đọc từ application-prod.yml: spring.seed-data.enabled
@@ -91,6 +97,23 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         log.info("✅ Seed completed: {} departments, {} employees",
                 departmentRepository.count(), employeeRepository.count());
+
+        // Seed default users (chỉ khi chưa có)
+        if (userRepository.count() == 0) {
+            userRepository.save(User.builder()
+                    .username("admin")
+                    .password(passwordEncoder.encode("admin123"))
+                    .role(User.Role.ADMIN)
+                    .build());
+
+            userRepository.save(User.builder()
+                    .username("user")
+                    .password(passwordEncoder.encode("user123"))
+                    .role(User.Role.USER)
+                    .build());
+
+            log.info("Default users created: admin/admin123, user/user123");
+        }
     }
 
     // ─── getAllEmployees ───────────────────────────────────────

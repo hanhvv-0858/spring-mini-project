@@ -31,7 +31,7 @@ public class ReportService {
     private final DepartmentRepository departmentRepository;
 
     /**
-     * LAB 8: Tổng số nhân viên trong hệ thống (có cache)
+     * Tổng số nhân viên trong hệ thống (có cache)
      *
      * key = "'total'" → cache key cố định (dấu '' trong SpEL = string literal)
      * Mỗi lần gọi trong TTL → trả ngay, không query DB

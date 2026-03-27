@@ -40,3 +40,8 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   pattern:
     console: "%d{HH:mm:ss} [%highlight(%-5level)] %cyan(%logger{36}) - %msg%n"
+
+# JWT
+jwt:
+  secret: mySecretKey404E635266556A586E3272357538782F413F4428472B4B6250645367566B59
+  expiration: 86400000
