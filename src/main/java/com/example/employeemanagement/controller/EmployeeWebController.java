@@ -3,10 +3,12 @@ package com.example.employeemanagement.controller;
 import com.example.employeemanagement.dto.request.EmployeeRequest;
 import com.example.employeemanagement.dto.response.DepartmentResponse;
 import com.example.employeemanagement.dto.response.EmployeeResponse;
+import com.example.employeemanagement.dto.response.StatisticsResponse;
 import com.example.employeemanagement.exception.BusinessException;
 import com.example.employeemanagement.repository.DepartmentRepository;
 import com.example.employeemanagement.service.DepartmentService;
 import com.example.employeemanagement.service.EmployeeService;
+import com.example.employeemanagement.service.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class EmployeeWebController {
 
     private final EmployeeService employeeService;
     private final DepartmentService departmentService;
+    private final ReportService reportService;
 
     // ─── LIST ─────────────────────────────────────────────────────
     @GetMapping("/list")
@@ -178,5 +181,16 @@ public class EmployeeWebController {
     // ─── HELPER ───────────────────────────────────────────────────
     private List<DepartmentResponse> getDepartments() {
         return departmentService.getAllDepartments();  // ← Qua Service, đúng layer
+    }
+
+    // ─── STATISTICS (Module 10) ───────────────────────────────────
+    @GetMapping("/statistics")
+    public String statistics(Model model) {
+        log.debug("Web: GET /employees/statistics");
+
+        StatisticsResponse stats = reportService.getFullStatistics();
+        model.addAttribute("stats", stats);
+        model.addAttribute("pageTitle", "Thống Kê Nhân Viên");
+        return "employees/statistics";
     }
 }

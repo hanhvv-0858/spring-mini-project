@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thống Kê Nhân Viên</title>
+    <th:block th:replace="~{fragments/layout :: title}"></th:block>
+    <style>
+        /* ── Summary Cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 8px 0 4px;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        .stat-card .icon { font-size: 24px; }
+        .stat-card.blue  { border-top: 4px solid #3498db; }
+        .stat-card.green { border-top: 4px solid #27ae60; }
+        .stat-card.orange{ border-top: 4px solid #e67e22; }
+        .stat-card.purple{ border-top: 4px solid #9b59b6; }
+        .stat-card.teal  { border-top: 4px solid #1abc9c; }
+        .stat-card.red   { border-top: 4px solid #e74c3c; }
+
+        /* ── Department Table ── */
+        .section-title {
+            font-size: 17px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 28px 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+        }
+
+        /* ── Bar Chart ── */
+        .bar-chart { margin-bottom: 28px; }
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .bar-label {
+            width: 140px;
+            font-size: 13px;
+            text-align: right;
+            color: #555;
+            flex-shrink: 0;
+        }
+        .bar-wrap {
+            flex: 1;
+            background: #f0f0f0;
+            border-radius: 4px;
+            height: 28px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            transition: width .5s ease;
+            min-width: 40px;
+        }
+        .bar-count {
+            width: 60px;
+            font-size: 13px;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        /* ── Cached notice ── */
+        .cached-notice {
+            font-size: 12px;
+            color: #95a5a6;
+            text-align: right;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <h1 class="page-title" th:text="${pageTitle}">Thống Kê Nhân Viên</h1>
+
+    <!-- Cached notice -->
+    <div class="cached-notice">
+        Dữ liệu tính lúc:
+        <span th:text="${#temporals.format(stats.calculatedAt, 'HH:mm:ss dd/MM/yyyy')}"></span>
+        &nbsp;·&nbsp; Cache TTL: 60s
+    </div>
+
+    <!-- ── Summary Cards ── -->
+    <div class="stats-grid">
+
+        <div class="stat-card blue">
+            <div class="icon">&#128101;</div>
+            <div class="value" th:text="${stats.totalEmployees}">0</div>
+            <div class="label">Tổng Nhân Viên</div>
+        </div>
+
+        <div class="stat-card green">
+            <div class="icon">&#127970;</div>
+            <div class="value" th:text="${stats.totalDepartments}">0</div>
+            <div class="label">Số Phòng Ban</div>
+        </div>
+
+        <div class="stat-card orange">
+            <div class="icon">&#128178;</div>
+            <div class="value"
+                 th:text="${#numbers.formatDecimal(stats.averageSalary, 0, 'COMMA', 0, 'POINT')}">0</div>
+            <div class="label">Lương Trung Bình (VNĐ)</div>
+        </div>
+
+        <div class="stat-card purple">
+            <div class="icon">&#128181;</div>
+            <div class="value"
+                 th:text="${#numbers.formatDecimal(stats.totalSalary, 0, 'COMMA', 0, 'POINT')}">0</div>
+            <div class="label">Tổng Quỹ Lương (VNĐ)</div>
+        </div>
+
+        <div class="stat-card teal">
+            <div class="icon">&#11014;</div>
+            <div class="value"
+                 th:text="${#numbers.formatDecimal(stats.maxSalary, 0, 'COMMA', 0, 'POINT')}">0</div>
+            <div class="label">Lương Cao Nhất (VNĐ)</div>
+        </div>
+
+        <div class="stat-card red">
+            <div class="icon">&#11015;</div>
+            <div class="value"
+                 th:text="${#numbers.formatDecimal(stats.minSalary, 0, 'COMMA', 0, 'POINT')}">0</div>
+            <div class="label">Lương Thấp Nhất (VNĐ)</div>
+        </div>
+
+    </div>
+
+    <!-- ── Bar Chart: Phân bổ theo phòng ban ── -->
+    <div class="section-title">&#128202; Phân Bổ Nhân Viên Theo Phòng Ban</div>
+
+    <div class="bar-chart">
+        <div class="bar-row" th:each="dept : ${stats.departmentStats}">
+            <div class="bar-label" th:text="${dept.deptName}"></div>
+            <div class="bar-wrap">
+                <div class="bar-fill"
+                     th:style="'width:' + ${dept.percentage} + '%'"
+                     th:text="${dept.percentage} + '%'">
+                </div>
+            </div>
+            <div class="bar-count" th:text="${dept.employeeCount} + ' NV'"></div>
+        </div>
+    </div>
+
+    <!-- ── Detail Table ── -->
+    <div class="section-title">&#128203; Chi Tiết Theo Phòng Ban</div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Phòng Ban</th>
+            <th>Số NV</th>
+            <th>Tỷ Lệ</th>
+            <th>Lương TB (VNĐ)</th>
+            <th>Lương Cao Nhất</th>
+            <th>Lương Thấp Nhất</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${stats.departmentStats.isEmpty()}">
+            <td colspan="7" class="empty-state">Chưa có dữ liệu</td>
+        </tr>
+        <tr th:each="dept, stat : ${stats.departmentStats}">
+            <td th:text="${stat.count}"></td>
+            <td th:text="${dept.deptName}"></td>
+            <td th:text="${dept.employeeCount}"></td>
+            <td th:text="${dept.percentage} + '%'"></td>
+            <td th:text="${#numbers.formatDecimal(dept.avgSalary, 0, 'COMMA', 0, 'POINT')}"></td>
+            <td th:text="${#numbers.formatDecimal(dept.maxSalary, 0, 'COMMA', 0, 'POINT')}"></td>
+            <td th:text="${#numbers.formatDecimal(dept.minSalary, 0, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px">
+        <a th:href="@{/employees/list}" class="btn btn-secondary">&#8592; Về Danh Sách</a>
+    </div>
+</div>
+</body>
+</html>
