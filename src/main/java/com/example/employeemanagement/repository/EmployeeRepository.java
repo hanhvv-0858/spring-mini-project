@@ -36,4 +36,46 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> searchByKeyword(@Param("keyword") String keyword);
 
     Optional<Employee> findByEmail(String email);
+
+    // ── Thống kê ────────────────────────────────────────
+    /**
+     * Thống kê theo phòng ban: số NV, lương TB, max, min
+     * Dùng Projection để chỉ lấy đúng field cần (tối ưu hơn load Entity)
+     */
+    @Query("""
+        SELECT d.name        AS deptName,
+               COUNT(e.id)   AS total,
+               AVG(e.salary) AS avgSalary,
+               MAX(e.salary) AS maxSalary,
+               MIN(e.salary) AS minSalary
+        FROM Employee e
+        JOIN e.department d
+        GROUP BY d.name
+        ORDER BY total DESC
+        """)
+    List<DeptStatProjection> getDepartmentStatistics();
+
+    /**
+     * Lương trung bình toàn hệ thống
+     */
+    @Query("SELECT AVG(e.salary) FROM Employee e WHERE e.salary IS NOT NULL")
+    Double getAverageSalary();
+
+    /**
+     * Tổng quỹ lương
+     */
+    @Query("SELECT SUM(e.salary) FROM Employee e WHERE e.salary IS NOT NULL")
+    Double getTotalSalary();
+
+    /**
+     * Lương cao nhất
+     */
+    @Query("SELECT MAX(e.salary) FROM Employee e WHERE e.salary IS NOT NULL")
+    Double getMaxSalary();
+
+    /**
+     * Lương thấp nhất
+     */
+    @Query("SELECT MIN(e.salary) FROM Employee e WHERE e.salary IS NOT NULL")
+    Double getMinSalary();
 }

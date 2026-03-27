@@ -1,5 +1,7 @@
 package com.example.employeemanagement.controller;
 
+import com.example.employeemanagement.dto.response.DeptStatResponse;
+import com.example.employeemanagement.dto.response.StatisticsResponse;
 import com.example.employeemanagement.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,12 +42,17 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getEmployeeSummary());
     }
 
-    /**
-     * Thống kê số nhân viên theo phòng ban
-     */
+    // GET /api/reports/statistics
+    @GetMapping("/statistics")
+    public ResponseEntity<StatisticsResponse> getStatistics() {
+        log.debug("API: GET /api/reports/statistics");
+        return ResponseEntity.ok(reportService.getFullStatistics());
+    }
+
+    // GET /api/reports/by-department
     @GetMapping("/by-department")
-    public ResponseEntity<List<Map<String, Object>>> getByDepartment() {
+    public ResponseEntity<List<DeptStatResponse>> getByDepartment() {
         log.debug("API: GET /api/reports/by-department");
-        return ResponseEntity.ok(reportService.getEmployeeCountByDepartment());
+        return ResponseEntity.ok(reportService.getDepartmentStats());
     }
 }
