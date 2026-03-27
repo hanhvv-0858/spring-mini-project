@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 
 import java.util.List;
 
@@ -91,7 +93,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 departmentRepository.count(), employeeRepository.count());
     }
 
-    // ─── READ ──────────────────────────────────────────────────────
+    // ─── getAllEmployees ───────────────────────────────────────
     @Override
     public List<EmployeeResponse> getAllEmployees() {
         log.debug("Fetching all employees");
@@ -101,6 +103,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         return result;
     }
 
+    // ─── getEmployeeById ──────────────────────────────────────
     @Override
     public EmployeeResponse getEmployeeById(Long id) {
         log.debug("Fetching employee id={}", id);
@@ -133,9 +136,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
-    // ─── WRITE ─────────────────────────────────────────────────────
+    // ─── createEmployee ───────────────────────────────────────
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "reportSummary", allEntries = true),
+            @CacheEvict(value = "reportByDept",  allEntries = true)
+    })
     public EmployeeResponse createEmployee(EmployeeRequest request) {
         log.info("Creating employee: name='{}', email='{}'",
                 request.getName(), request.getEmail());
@@ -170,6 +177,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "reportSummary", allEntries = true),
+            @CacheEvict(value = "reportByDept",  allEntries = true)
+    })
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
         log.info("Updating employee id={}", id);
 
@@ -220,8 +231,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         return toResponse(employee);
     }
 
+    // ─── deleteEmployee ───────────────────────────────────────
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "reportSummary", allEntries = true),
+            @CacheEvict(value = "reportByDept",  allEntries = true)
+    })
     public void deleteEmployee(Long id) {
         log.info("Deleting employee id={}", id);
 
@@ -234,7 +250,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         log.info("✅ Employee deleted: id={}", id);
     }
 
-    // ─── MAPPER ────────────────────────────────────────────────────
+    // ─── MAPPER ───────────────────────────────────────────────────
+    // Convert Entity → DTO, có thể dùng MapStruct nếu phức tạp hơn
     private EmployeeResponse toResponse(Employee e) {
         return EmployeeResponse.builder()
                 .id(e.getId())

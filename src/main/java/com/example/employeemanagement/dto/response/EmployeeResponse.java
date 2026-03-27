@@ -13,7 +13,7 @@ public class EmployeeResponse {
     private String email;
     private String position;
     private Double salary;
-    private Long departmentId;       // ← Thêm mới
-    private String departmentName;   // ← Thêm mới
+    private Long departmentId;
+    private String departmentName;
     private LocalDateTime createdAt;
 }

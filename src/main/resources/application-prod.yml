@@ -40,6 +40,11 @@ spring:
   seed-data:
     enabled: true
 
+  # ── Cache riêng cho prod (TTL dài hơn dev) ────────────────
+  cache:
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=300s   # 5 phút ở prod
+
 # ── Logging: PROD — chỉ INFO trở lên + ghi file ──────────
 logging:
   level:
@@ -56,3 +61,8 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n"
     file:    "%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n"
+
+  # ── Scheduler config (đọc bằng @Value) ───────────────────
+  app:
+    scheduler:
+      system-check-interval: 30000    # 30 giây

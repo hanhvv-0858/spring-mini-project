@@ -18,15 +18,34 @@ spring:
   # ── JPA chung ─────────────────────────────────────────────────
   jpa:
     show-sql: false          # Tắt ở base, bật lại theo profile nếu cần
-    open-in-view: false      # Best practice: tắt OSIV tránh lazy loading ngoài transaction
+    open-in-view: false      # tắt OSIV tránh lazy loading ngoài transaction
+  # ── Cache chung (dùng cả 2 profile) ───────────────────────────────
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=60s   # Cache sống 60 giây
 
 # ── Server ────────────────────────────────────────────────────
 server:
   port: 8080
 
-# ── Actuator
+# ── Actuator ───────────────────────────────────
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,loggers
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# ── App Info hiện trong /actuator/info ────────────────────
+info:
+  app:
+    name: Employee Management System
+    version: 1.0.0-Module8
+    description: Spring Boot Learning Project
+    modules-completed: 8
