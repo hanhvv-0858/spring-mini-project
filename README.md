@@ -224,6 +224,7 @@ employee-management/
     ├── main/
     │   ├── java/com/example/employeemanagement/
     │   │   ├── EmployeeManagementApplication.java   # @EnableScheduling @EnableCaching
+    │   │   ├── HelloController.java   # /api/hello
     │   │   ├── config/
     │   │   │   ├── AppConfig.java                  # PasswordEncoder, ModelMapper
     │   │   │   └── SecurityConfig.java             # 2 filter chains: API (JWT) + Web
@@ -232,7 +233,6 @@ employee-management/
     │   │   │   ├── DepartmentController.java       # /api/departments
     │   │   │   ├── EmployeeController.java         # /api/employees
     │   │   │   ├── EmployeeWebController.java      # /employees/** (Thymeleaf)
-    │   │   │   ├── HelloController.java            # /api/hello
     │   │   │   └── ReportController.java           # /api/reports/**
     │   │   ├── dto/
     │   │   │   ├── auth/
