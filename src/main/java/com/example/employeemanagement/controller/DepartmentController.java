@@ -4,58 +4,44 @@ import com.example.employeemanagement.dto.request.DepartmentRequest;
 import com.example.employeemanagement.dto.response.DepartmentResponse;
 import com.example.employeemanagement.entity.Department;
 import com.example.employeemanagement.repository.DepartmentRepository;
+import com.example.employeemanagement.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller → DepartmentService → Repository
+ *
+ * Phân quyền:
+ *   GET  /api/departments → Mọi user đã login
+ *   POST /api/departments → Chỉ ADMIN
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/departments")
 @RequiredArgsConstructor
 public class DepartmentController {
 
-    private final DepartmentRepository departmentRepository;
+    private final DepartmentService departmentService;
 
     @GetMapping
-    public List<DepartmentResponse> getAll() {
+    public ResponseEntity<List<DepartmentResponse>> getAll() {
         log.debug("API: GET /api/departments");
-        List<DepartmentResponse> result = departmentRepository.findAllWithEmployees()
-                .stream()
-                .map(d -> DepartmentResponse.builder()
-                        .id(d.getId())
-                        .name(d.getName())
-                        .description(d.getDescription())
-                        .employeeCount(d.getEmployees().size())
-                        .build())
-                .toList();
-        log.debug("API: Returned {} departments", result.size());
-        return result;
+        return ResponseEntity.ok(departmentService.getAllDepartments());
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DepartmentResponse> create(
             @Valid @RequestBody DepartmentRequest request) {
-        log.info("API: Creating department name='{}'", request.getName());
-        Department saved = departmentRepository.save(
-                Department.builder()
-                        .name(request.getName())
-                        .description(request.getDescription())
-                        .build()
-        );
-        log.info("✅ Department created: id={}, name='{}'",
-                saved.getId(), saved.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                DepartmentResponse.builder()
-                        .id(saved.getId())
-                        .name(saved.getName())
-                        .description(saved.getDescription())
-                        .employeeCount(0)
-                        .build()
-        );
+        log.info("API: POST /api/departments name='{}'", request.getName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(departmentService.createDepartment(request));
     }
 }

@@ -5,6 +5,7 @@ import com.example.employeemanagement.dto.response.DepartmentResponse;
 import com.example.employeemanagement.dto.response.EmployeeResponse;
 import com.example.employeemanagement.exception.BusinessException;
 import com.example.employeemanagement.repository.DepartmentRepository;
+import com.example.employeemanagement.service.DepartmentService;
 import com.example.employeemanagement.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ import java.util.List;
 public class EmployeeWebController {
 
     private final EmployeeService employeeService;
-    private final DepartmentRepository departmentRepository;
+    private final DepartmentService departmentService;
 
     // ─── LIST ─────────────────────────────────────────────────────
     @GetMapping("/list")
@@ -176,11 +177,6 @@ public class EmployeeWebController {
 
     // ─── HELPER ───────────────────────────────────────────────────
     private List<DepartmentResponse> getDepartments() {
-        return departmentRepository.findAll().stream()
-                .map(d -> DepartmentResponse.builder()
-                        .id(d.getId())
-                        .name(d.getName())
-                        .build())
-                .toList();
+        return departmentService.getAllDepartments();  // ← Qua Service, đúng layer
     }
 }
