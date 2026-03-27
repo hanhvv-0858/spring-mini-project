@@ -24,7 +24,7 @@ public class DepartmentController {
     @GetMapping
     public List<DepartmentResponse> getAll() {
         log.debug("API: GET /api/departments");
-        List<DepartmentResponse> result = departmentRepository.findAll()
+        List<DepartmentResponse> result = departmentRepository.findAllWithEmployees()
                 .stream()
                 .map(d -> DepartmentResponse.builder()
                         .id(d.getId())

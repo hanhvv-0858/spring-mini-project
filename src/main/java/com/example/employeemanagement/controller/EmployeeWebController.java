@@ -66,7 +66,6 @@ public class EmployeeWebController {
         try {
             EmployeeResponse created = employeeService.createEmployee(request);
             log.info("Web: Employee created via form — id={}, name='{}'",
-                    created.getId(), created.getName());log.info("Web: Employee created via form — id={}, name='{}'",
                     created.getId(), created.getName());
 
             redirectAttributes.addFlashAttribute("successMessage",

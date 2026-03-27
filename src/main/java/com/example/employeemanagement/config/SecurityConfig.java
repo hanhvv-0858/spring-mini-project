@@ -27,6 +27,7 @@ public class SecurityConfig {
                                 "/employees/**", // MVC routes
                                 "/departments/**",// MVC routes
                                 "/h2-console/**",
+                                "/actuator/**",
                                 "/css/**",
                                 "/js/**"
                         ).permitAll()

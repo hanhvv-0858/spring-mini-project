@@ -76,7 +76,9 @@ public class UtilityService {
                         + word.substring(1).toLowerCase())
                 .collect(Collectors.joining(" "));
     }
-
+    /**
+     * Format ngày theo pattern đẹp hơn cho UI
+     */
     public String formatDate(LocalDate date) {
         if (date == null) return "N/A";
         return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
